@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Zombie Road</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Arial,sans-serif;
+  background:#263d25;
+}
+
+#game{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+}
+
+#road{
+  position:absolute;
+  left:5%;
+  width:90%;
+  height:100%;
+  overflow:hidden;
+  background:#404040;
+  border-left:12px solid #888;
+  border-right:12px solid #888;
+}
+
+/* ROAD */
+
+.roadLine{
+  position:absolute;
+  width:7px;
+  height:100px;
+  background:white;
+  opacity:.8;
+}
+
+.lineA{
+  left:33.333%;
+}
+
+.lineB{
+  left:66.666%;
+}
+
+/* PLAYER */
+
+#player{
+  position:absolute;
+  width:52px;
+  height:88px;
+  left:50%;
+  bottom:65px;
+  transform:translateX(-50%);
+  background:#246fd1;
+  border-radius:10px;
+  z-index:40;
+  box-shadow:0 5px 12px rgba(0,0,0,.7);
+}
+
+#playerWindow{
+  position:absolute;
+  width:38px;
+  height:27px;
+  left:7px;
+  top:10px;
+  border-radius:6px;
+  background:#9ed7e8;
+}
+
+#playerStripe{
+  position:absolute;
+  width:40px;
+  height:5px;
+  left:6px;
+  top:42px;
+  background:rgba(255,255,255,.35);
+}
+
+.wheel{
+  position:absolute;
+  width:10px;
+  height:27px;
+  background:#111;
+  border-radius:4px;
+  top:20px;
+}
+
+.wheel.left{
+  left:-7px;
+}
+
+.wheel.right{
+  right:-7px;
+}
+
+.light{
+  position:absolute;
+  width:10px;
+  height:7px;
+  bottom:5px;
+  background:#fff;
+  border-radius:2px;
+}
+
+.light.left{
+  left:7px;
+}
+
+.light.right{
+  right:7px;
+}
+
+/* TRAFFIC */
+
+.car{
+  position:absolute;
+  width:48px;
+  height:84px;
+  transform:translateX(-50%);
+  border-radius:9px;
+  z-index:20;
+  box-shadow:0 4px 8px rgba(0,0,0,.65);
+}
+
+.carWindow{
+  position:absolute;
+  width:34px;
+  height:25px;
+  left:7px;
+  top:9px;
+  background:#a7d7e5;
+  border-radius:5px;
+}
+
+.carWheel{
+  position:absolute;
+  width:9px;
+  height:25px;
+  background:#111;
+  border-radius:3px;
+  top:19px;
+}
+
+.carWheel.left{
+  left:-6px;
+}
+
+.carWheel.right{
+  right:-6px;
+}
+
+/* WRECKED CARS */
+
+.wreck{
+  background:#292929 !important;
+  transform:translateX(-50%) rotate(-8deg);
+  opacity:.95;
+}
+
+.wreck:after{
+  content:"";
+  position:absolute;
+  left:5px;
+  right:5px;
+  top:37px;
+  height:8px;
+  background:#111;
+}
+
+.wreckWindow{
+  background:#555 !important;
+}
+
+/* ZOMBIES */
+
+.zombie{
+  position:absolute;
+  width:34px;
+  height:50px;
+  transform:translateX(-50%);
+  z-index:25;
+}
+
+.zombieHead{
+  position:absolute;
+  width:25px;
+  height:25px;
+  left:5px;
+  top:0;
+  border-radius:50%;
+  background:#6d9b58;
+}
+
+.zombieBody{
+  position:absolute;
+  width:30px;
+  height:28px;
+  left:2px;
+  top:20px;
+  border-radius:8px 8px 4px 4px;
+  background:#4e6847;
+}
+
+.zombieEye{
+  position:absolute;
+  width:4px;
+  height:4px;
+  background:#111;
+  border-radius:50%;
+  top:9px;
+}
+
+.zombieEye.left{
+  left:7px;
+}
+
+.zombieEye.right{
+  right:7px;
+}
+
+.zombieArm{
+  position:absolute;
+  width:7px;
+  height:24px;
+  background:#6d9b58;
+  border-radius:5px;
+  top:23px;
+}
+
+.zombieArm.left{
+  left:-5px;
+  transform:rotate(25deg);
+}
+
+.zombieArm.right{
+  right:-5px;
+  transform:rotate(-25deg);
+}
+
+/* HEALTH KITS */
+
+.medkit{
+  position:absolute;
+  width:32px;
+  height:32px;
+  background:#f2f2f2;
+  border:3px solid #222;
+  border-radius:6px;
+  z-index:24;
+}
+
+.medkit:before{
+  content:"+";
+  position:absolute;
+  width:100%;
+  text-align:center;
+  top:-3px;
+  color:#d22;
+  font-size:28px;
+  font-weight:bold;
+}
+
+/* BLOOD EFFECT */
+
+#bloodOverlay{
+  position:absolute;
+  inset:0;
+  z-index:100;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity:.15s;
+  background:
+    radial-gradient(
+      ellipse at 15% 10%,
+      rgba(150,0,0,.75) 0 4%,
+      transparent 12%
+    ),
+    radial-gradient(
+      ellipse at 85% 15%,
+      rgba(150,0,0,.7) 0 5%,
+      transparent 13%
+    ),
+    radial-gradient(
+      ellipse at 20% 90%,
+      rgba(150,0,0,.7) 0 5%,
+      transparent 14%
+    ),
+    radial-gradient(
+      ellipse at 80% 88%,
+      rgba(150,0,0,.7) 0 5%,
+      transparent 14%
+    );
+}
+
+/* DAMAGE FLASH */
+
+#damageFlash{
+  position:absolute;
+  inset:0;
+  z-index:110;
+  pointer-events:none;
+  background:rgba(220,0,0,.45);
+  opacity:0;
+}
+
+/* HUD */
+
+#hud{
+  position:absolute;
+  top:10px;
+  left:10px;
+  z-index:120;
+  color:white;
+  font-weight:bold;
+  font-size:17px;
+  line-height:1.5;
+  text-shadow:2px 2px 4px black;
+}
+
+#healthBar{
+  width:145px;
+  height:17px;
+  background:#222;
+  border:2px solid white;
+  border-radius:6px;
+  overflow:hidden;
+  display:inline-block;
+  vertical-align:middle;
+}
+
+#healthFill{
+  height:100%;
+  width:100%;
+  background:#32c653;
+}
+
+/* CONTROLS */
+
+#controls{
+  position:absolute;
+  bottom:17px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:20px;
+  z-index:120;
+}
+
+.control{
+  width:85px;
+  height:62px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  background:rgba(0,0,0,.55);
+  border:2px solid white;
+  border-radius:12px;
+  font-size:32px;
+  touch-action:none;
+}
+
+.control:active{
+  background:rgba(255,255,255,.25);
+}
+
+/* SCREENS */
+
+.screen{
+  position:absolute;
+  inset:0;
+  z-index:300;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:white;
+  background:rgba(0,0,0,.84);
+  padding:25px;
+}
+
+.screen h1{
+  margin:0 0 10px;
+  font-size:42px;
+  letter-spacing:3px;
+}
+
+.screen p{
+  max-width:520px;
+  line-height:1.5;
+}
+
+button{
+  border:0;
+  border-radius:9px;
+  padding:15px 34px;
+  color:white;
+  background:#1685ff;
+  font-size:20px;
+  font-weight:bold;
+}
+
+.hidden{
+  display:none!important;
+}
+
+#crashFlash{
+  position:absolute;
+  inset:0;
+  background:white;
+  opacity:0;
+  pointer-events:none;
+  z-index:150;
+}
+
+@media(max-width:600px){
+
+  #road{
+    left:3%;
+    width:94%;
+  }
+
+  .screen h1{
+    font-size:32px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+  <div id="road"></div>
+
+  <div id="player">
+
+    <div id="playerWindow"></div>
+    <div id="playerStripe"></div>
+
+    <div class="wheel left"></div>
+    <div class="wheel right"></div>
+
+    <div class="light left"></div>
+    <div class="light right"></div>
+
+  </div>
+
+  <div id="hud">
+
+    DISTANCE:
+    <span id="distance">0</span> m
+
+    <br>
+
+    SCORE:
+    <span id="score">0</span>
+
+    <br>
+
+    SPEED:
+    <span id="speed">120</span> km/h
+
+    <br>
+
+    HEALTH:
+
+    <div id="healthBar">
+      <div id="healthFill"></div>
+    </div>
+
+  </div>
+
+  <div id="controls">
+
+    <div class="control" id="leftButton">
+      ◀
+    </div>
+
+    <div class="control" id="rightButton">
+      ▶
+    </div>
+
+  </div>
+
+  <div id="bloodOverlay"></div>
+
+  <div id="damageFlash"></div>
+
+  <div id="crashFlash"></div>
+
+  <div id="startScreen" class="screen">
+
+    <h1>ZOMBIE ROAD</h1>
+
+    <p>
+
+      The highway isn't safe anymore.
+
+      <br><br>
+
+      Dodge wrecked cars, avoid obstacles,
+      collect health kits and survive the road.
+
+      <br><br>
+
+      Zombies can wander into the highway.
+      Hitting them increases the red damage
+      effect on your screen.
+
+      <br><br>
+
+      <b>
+        Crashes reduce your health.
+      </b>
+
+      <br><br>
+
+      <b>
+        Arrow Keys / A & D
+      </b>
+      or use the buttons.
+
+    </p>
+
+    <button id="startButton">
+      START DRIVING
+    </button>
+
+  </div>
+
+  <div id="gameOver" class="screen hidden">
+
+    <h1>GAME OVER</h1>
+
+    <p>
+
+      You didn't make it.
+
+      <br><br>
+
+      Distance:
+      <b>
+        <span id="finalDistance">0</span> m
+      </b>
+
+      <br>
+
+      Score:
+      <b>
+        <span id="finalScore">0</span>
+      </b>
+
+    </p>
+
+    <button id="restartButton">
+      TRY AGAIN
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+/* =========================================
+   GAME SETUP
+   ========================================= */
+
+const road =
+  document.getElementById("road");
+
+const player =
+  document.getElementById("player");
+
+const distanceText =
+  document.getElementById("distance");
+
+const scoreText =
+  document.getElementById("score");
+
+const speedText =
+  document.getElementById("speed");
+
+const healthFill =
+  document.getElementById("healthFill");
+
+const startScreen =
+  document.getElementById("startScreen");
+
+const gameOver =
+  document.getElementById("gameOver");
+
+const finalDistance =
+  document.getElementById("finalDistance");
+
+const finalScore =
+  document.getElementById("finalScore");
+
+const bloodOverlay =
+  document.getElementById("bloodOverlay");
+
+const damageFlash =
+  document.getElementById("damageFlash");
+
+
+let running = false;
+
+let lastTime = 0;
+
+let distance = 0;
+
+let score = 0;
+
+let speed = 12;
+
+let health = 100;
+
+
+/*
+  Player horizontal position.
+
+  This does NOT automatically return
+  to the center.
+*/
+
+let playerX = 0;
+
+
+/*
+  -1 = left
+   0 = no steering
+   1 = right
+*/
+
+let steering = 0;
+
+
+let traffic = [];
+
+let zombies = [];
+
+let medkits = [];
+
+let wrecks = [];
+
+let roadLines = [];
+
+let spawnTimer = 0;
+
+let zombieTimer = 0;
+
+let medkitTimer = 0;
+
+let wreckTimer = 0;
+
+
+/* =========================================
+   ROAD
+   ========================================= */
+
+function createRoad(){
+
+  for(let i=0;i<15;i++){
+
+    const lineA =
+      document.createElement("div");
+
+    lineA.className =
+      "roadLine lineA";
+
+    lineA.style.top =
+      (i * 115 - 120) + "px";
+
+    road.appendChild(lineA);
+
+    roadLines.push(lineA);
+
+
+    const lineB =
+      document.createElement("div");
+
+    lineB.className =
+      "roadLine lineB";
+
+    lineB.style.top =
+      (i * 115 - 120) + "px";
+
+    road.appendChild(lineB);
+
+    roadLines.push(lineB);
+
+  }
+
+}
+
+
+/* =========================================
+   ROAD MOVEMENT
+   ========================================= */
+
+function moveRoad(delta){
+
+  for(const line of roadLines){
+
+    let y =
+      parseFloat(line.style.top);
+
+    y +=
+      speed *
+      .95 *
+      delta;
+
+    if(
+      y >
+      window.innerHeight + 120
+    ){
+
+      y = -120;
+
+    }
+
+    line.style.top =
+      y + "px";
+
+  }
+
+}
+
+
+/* =========================================
+   PLAYER
+   ========================================= */
+
+function updatePlayer(delta){
+
+  const steeringPower = 1.75;
+
+  if(steering !== 0){
+
+    playerX +=
+      steering *
+      steeringPower *
+      delta;
+
+  }
+
+
+  const maxX =
+    road.clientWidth / 2 - 40;
+
+
+  if(playerX > maxX){
+
+    playerX = maxX;
+
+  }
+
+
+  if(playerX < -maxX){
+
+    playerX = -maxX;
+
+  }
+
+
+  player.style.left =
+    `calc(50% + ${playerX}px)`;
+
+}
+
+
+/* =========================================
+   CREATE NORMAL CAR
+   ========================================= */
+
+function createTraffic(){
+
+  if(!running)return;
+
+
+  const car =
+    document.createElement("div");
+
+  car.className =
+    "car";
+
+
+  const colors = [
+
+    "#d93434",
+    "#eeeeee",
+    "#222222",
+    "#e0b42d",
+    "#29964f",
+    "#7545c2",
+    "#e87820",
+    "#277cc9",
+    "#999999"
+
+  ];
+
+
+  car.style.background =
+    colors[
+      Math.floor(
+        Math.random() *
+        colors.length
+      )
+    ];
+
+
+  const margin = 40;
+
+
+  const x =
+    margin +
+    Math.random() *
+    (
+      road.clientWidth -
+      margin * 2
+    );
+
+
+  const y = -110;
+
+
+  car.style.left =
+    x + "px";
+
+  car.style.top =
+    y + "px";
+
+
+  const windowDiv =
+    document.createElement("div");
+
+  windowDiv.className =
+    "carWindow";
+
+  car.appendChild(windowDiv);
+
+
+  const wheel1 =
+    document.createElement("div");
+
+  wheel1.className =
+    "carWheel left";
+
+  car.appendChild(wheel1);
+
+
+  const wheel2 =
+    document.createElement("div");
+
+  wheel2.className =
+    "carWheel right";
+
+  car.appendChild(wheel2);
+
+
+  road.appendChild(car);
+
+
+  traffic.push({
+
+    element:car,
+
+    x:x,
+
+    y:y,
+
+    hit:false
+
+  });
+
+}
+
+
+/* =========================================
+   WRECKED CAR
+   ========================================= */
+
+function createWreck(){
+
+  if(!running)return;
+
+
+  const car =
+    document.createElement("div");
+
+  car.className =
+    "car wreck";
+
+
+  const margin = 40;
+
+
+  const x =
+    margin +
+    Math.random() *
+    (
+      road.clientWidth -
+      margin * 2
+    );
+
+
+  const y = -120;
+
+
+  car.style.left =
+    x + "px";
+
+  car.style.top =
+    y + "px";
+
+
+  const windowDiv =
+    document.createElement("div");
+
+  windowDiv.className =
+    "carWindow wreckWindow";
+
+  car.appendChild(windowDiv);
+
+
+  const wheel1 =
+    document.createElement("div");
+
+  wheel1.className =
+    "carWheel left";
+
+  car.appendChild(wheel1);
+
+
+  const wheel2 =
+    document.createElement("div");
+
+  wheel2.className =
+    "carWheel right";
+
+  car.appendChild(wheel2);
+
+
+  road.appendChild(car);
+
+
+  wrecks.push({
+
+    element:car,
+
+    x:x,
+
+    y:y,
+
+    hit:false
+
+  });
+
+}
+
+
+/* =========================================
+   ZOMBIE
+   ========================================= */
+
+function createZombie(){
+
+  if(!running)return;
+
+
+  const zombie =
+    document.createElement("div");
+
+  zombie.className =
+    "zombie";
+
+
+  const head =
+    document.createElement("div");
+
+  head.className =
+    "zombieHead";
+
+  zombie.appendChild(head);
+
+
+  const body =
+    document.createElement("div");
+
+  body.className =
+    "zombieBody";
+
+  zombie.appendChild(body);
+
+
+  const eye1 =
+    document.createElement("div");
+
+  eye1.className =
+    "zombieEye left";
+
+  zombie.appendChild(eye1);
+
+
+  const eye2 =
+    document.createElement("div");
+
+  eye2.className =
+    "zombieEye right";
+
+  zombie.appendChild(eye2);
+
+
+  const arm1 =
+    document.createElement("div");
+
+  arm1.className =
+    "zombieArm left";
+
+  zombie.appendChild(arm1);
+
+
+  const arm2 =
+    document.createElement("div");
+
+  arm2.className =
+    "zombieArm right";
+
+  zombie.appendChild(arm2);
+
+
+  const margin = 35;
+
+
+  const x =
+    margin +
+    Math.random() *
+    (
+      road.clientWidth -
+      margin * 2
+    );
+
+
+  const y = -80;
+
+
+  zombie.style.left =
+    x + "px";
+
+  zombie.style.top =
+    y + "px";
+
+
+  road.appendChild(zombie);
+
+
+  zombies.push({
+
+    element:zombie,
+
+    x:x,
+
+    y:y,
+
+    hit:false
+
+  });
+
+}
+
+
+/* =========================================
+   HEALTH KIT
+   ========================================= */
+
+function createMedkit(){
+
+  if(!running)return;
+
+
+  const kit =
+    document.createElement("div");
+
+  kit.className =
+    "medkit";
+
+
+  const margin = 40;
+
+
+  const x =
+    margin +
+    Math.random() *
+    (
+      road.clientWidth -
+      margin * 2
+    );
+
+
+  const y = -60;
+
+
+  kit.style.left =
+    x + "px";
+
+  kit.style.top =
+    y + "px";
+
+
+  road.appendChild(kit);
+
+
+  medkits.push({
+
+    element:kit,
+
+    x:x,
+
+    y:y
+
+  });
+
+}
+
+
+/* =========================================
+   COLLISION
+   ========================================= */
+
+function isColliding(a,b){
+
+  const A =
+    a.getBoundingClientRect();
+
+  const B =
+    b.getBoundingClientRect();
+
+
+  return !(
+    A.right < B.left + 5 ||
+    A.left > B.right - 5 ||
+    A.bottom < B.top + 5 ||
+    A.top > B.bottom - 5
+  );
+
+}
+
+
+/* =========================================
+   PLAYER DAMAGE
+   ========================================= */
+
+function damagePlayer(amount){
+
+  health -= amount;
+
+
+  if(health < 0){
+
+    health = 0;
+
+  }
+
+
+  healthFill.style.width =
+    health + "%";
+
+
+  damageFlash.style.opacity =
+    ".55";
+
+
+  setTimeout(()=>{
+
+    damageFlash.style.opacity =
+      "0";
+
+  },120);
+
+
+  speed -= 1.5;
+
+
+  if(speed < 6){
+
+    speed = 6;
+
+  }
+
+
+  if(health <= 0){
+
+    endGame();
+
+  }
+
+}
+
+
+/* =========================================
+   ZOMBIE HIT
+   ========================================= */
+
+function hitZombie(zombie){
+
+  if(zombie.hit)return;
+
+  zombie.hit = true;
+
+
+  /*
+    Increase the screen effect.
+    It stays stylized rather than
+    showing graphic injury.
+  */
+
+  const current =
+    parseFloat(
+      bloodOverlay.style.opacity || 0
+    );
+
+
+  bloodOverlay.style.opacity =
+    Math.min(
+      .82,
+      current + .12
+    );
+
+
+  score += 30;
+
+
+  zombie.element.remove();
+
+
+}
+
+
+/* =========================================
+   NORMAL CAR HIT
+   ========================================= */
+
+function hitTraffic(car){
+
+  if(car.hit)return;
+
+  car.hit = true;
+
+
+  const playerCenter =
+    road.clientWidth / 2 +
+    playerX;
+
+
+  if(car.x > playerCenter){
+
+    car.x += 55;
+
+  }else{
+
+    car.x -= 55;
+
+  }
+
+
+  const maxX =
+    road.clientWidth - 30;
+
+
+  car.x =
+    Math.max(
+      30,
+      Math.min(maxX,car.x)
+    );
+
+
+  car.element.style.left =
+    car.x + "px";
+
+
+  speed -= 2;
+
+
+  if(speed < 6){
+
+    speed = 6;
+
+  }
+
+
+  score += 10;
+
+
+  damagePlayer(12);
+
+}
+
+
+/* =========================================
+   WRECK HIT
+   ========================================= */
+
+function hitWreck(wreck){
+
+  if(wreck.hit)return;
+
+  wreck.hit = true;
+
+
+  speed -= 2.5;
+
+
+  if(speed < 5){
+
+    speed = 5;
+
+  }
+
+
+  damagePlayer(18);
+
+}
+
+
+/* =========================================
+   MEDKIT
+   ========================================= */
+
+function collectMedkit(index){
+
+  const kit =
+    medkits[index];
+
+
+  health += 25;
+
+
+  if(health > 100){
+
+    health = 100;
+
+  }
+
+
+  healthFill.style.width =
+    health + "%";
+
+
+  score += 20;
+
+
+  kit.element.remove();
+
+
+  medkits.splice(
+    index,
+    1
+  );
+
+}
+
+
+/* =========================================
+   MOVE TRAFFIC
+   ========================================= */
+
+function moveTraffic(delta){
+
+  for(
+    let i = traffic.length - 1;
+    i >= 0;
+    i--
+  ){
+
+    const car =
+      traffic[i];
+
+
+    car.y +=
+      speed *
+      .88 *
+      delta;
+
+
+    car.element.style.top =
+      car.y + "px";
+
+
+    if(
+      isColliding(
+        player,
+        car.element
+      )
+    ){
+
+      hitTraffic(car);
+
+    }
+
+
+    if(
+      car.y >
+      window.innerHeight + 150
+    ){
+
+      car.element.remove();
+
+      traffic.splice(i,1);
+
+    }
+
+  }
+
+}
+
+
+/* =========================================
+   MOVE WRECKS
+   ========================================= */
+
+function moveWrecks(delta){
+
+  for(
+    let i = wrecks.length - 1;
+    i >= 0;
+    i--
+  ){
+
+    const wreck =
+      wrecks[i];
+
+
+    wreck.y +=
+      speed *
+      .82 *
+      delta;
+
+
+    wreck.element.style.top =
+      wreck.y + "px";
+
+
+    if(
+      isColliding(
+        player,
+        wreck.element
+      )
+    ){
+
+      hitWreck(wreck);
+
+    }
+
+
+    if(
+      wreck.y >
+      window.innerHeight + 150
+    ){
+
+      wreck.element.remove();
+
+      wrecks.splice(i,1);
+
+    }
+
+  }
+
+}
+
+
+/* =========================================
+   MOVE ZOMBIES
+   ========================================= */
+
+function moveZombies(delta){
+
+  for(
+    let i = zombies.length - 1;
+    i >= 0;
+    i--
+  ){
+
+    const zombie =
+      zombies[i];
+
+
+    zombie.y +=
+      speed *
+      .95 *
+      delta;
+
+
+    zombie.element.style.top =
+      zombie.y + "px";
+
+
+    if(
+      isColliding(
+        player,
+        zombie.element
+      )
+    ){
+
+      hitZombie(zombie);
+
+      zombies.splice(i,1);
+
+      continue;
+
+    }
+
+
+    if(
+      zombie.y >
+      window.innerHeight + 100
+    ){
+
+      zombie.element.remove();
+
+      zombies.splice(i,1);
+
+    }
+
+  }
+
+}
+
+
+/* =========================================
+   MOVE MEDKITS
+   ========================================= */
+
+function moveMedkits(delta){
+
+  for(
+    let i = medkits.length - 1;
+    i >= 0;
+    i--
+  ){
+
+    const kit =
+      medkits[i];
+
+
+    kit.y +=
+      speed *
+      .9 *
+      delta;
+
+
+    kit.element.style.top =
+      kit.y + "px";
+
+
+    if(
+      isColliding(
+        player,
+        kit.element
+      )
+    ){
+
+      collectMedkit(i);
+
+      continue;
+
+    }
+
+
+    if(
+      kit.y >
+      window.innerHeight + 100
+    ){
+
+      kit.element.remove();
+
+      medkits.splice(i,1);
+
+    }
+
+  }
+
+}
+
+
+/* =========================================
+   SPAWNING
+   ========================================= */
+
+function spawnObjects(delta){
+
+  if(!running)return;
+
+
+  spawnTimer -= delta;
+
+  zombieTimer -= delta;
+
+  medkitTimer -= delta;
+
+  wreckTimer -= delta;
+
+
+  if(spawnTimer <= 0){
+
+    createTraffic();
+
+
+    spawnTimer =
+      Math.max(
+        350,
+        720 - speed * 15
+      );
+
+ 
